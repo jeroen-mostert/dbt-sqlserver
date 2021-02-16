@@ -385,7 +385,14 @@ class SQLServerConnectionManager(SQLConnectionManager):
         _, cursor = self.add_query(sql, auto_begin)
         status = self.get_response(cursor)
         if fetch:
+            # Get the result of the first non-empty result set (if any)
+            while cursor.description is None:
+                if not cursor.nextset(): 
+                    break
             table = self.get_result_from_cursor(cursor)
         else:
             table = dbt.clients.agate_helper.empty_table()
+        # Step through all result sets so we process all errors
+        while cursor.nextset(): 
+            pass
         return status, table
